@@ -17,8 +17,22 @@ const SimpleInput = (props) => {
 
   const nameInputHandler = event=> {
     setEnteredName(event.target.value);
+    // Remove the error when input becomes valid (validationg after every keystroke)
+    //we will use event.target.value instead of entered name as  state updtaes aren't scheduled by React
+    //not processed immediately
+    if (event.target.value.trim() !== "") {
+      setIsNameValid(true);
+    }
   }
   // gets event object by default when binded to the input
+
+  // validate OR to show the error when input loses it's focus
+  const onBlurHandler = () => {
+    setInputTouched(true);
+    if (enteredName.trim() === "") {
+      setIsNameValid(false);
+    }
+  }
 
   const submitHandler =event => {
     event.preventDefault();
@@ -47,8 +61,8 @@ const SimpleInput = (props) => {
     <form onSubmit={submitHandler}>
       <div className={formClass}>
         <label htmlFor='name'>Your Name</label>
-        <input ref={inputRef} type='text' id='name' onChange={nameInputHandler} value={enteredName} />
-        {nameInputInvalid && <p>Enter a valid name</p>}
+        <input ref={inputRef} type='text' id='name' onChange={nameInputHandler} value={enteredName} onBlur={onBlurHandler}/>
+        {nameInputInvalid && <p className="error-text">Enter a valid name</p>}
       </div>
       <div className="form-actions">
         <button>Submit</button>
