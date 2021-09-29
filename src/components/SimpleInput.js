@@ -1,45 +1,31 @@
-import {useState } from "react";
+import useValidation from "../hooks/use-validation";
 
 const SimpleInput = (props) => {
-  const [enteredName, setEnteredName] = useState('');
-  // for storing values after every key stroke
-  const [enteredEmail, setEnteredEmail] = useState('');
-  const [enteredEmailTouched, setEnteredEmailTouched] = useState(false);
+  const {
+    value: enteredName,
+    isValueValid: isNameValid,
+    isInputInvalid: isNameInputInvalid,
+    onChangeHandler: nameInputChangeHandler,
+    onBlurHandler: nameBlurHandler,
+    reset: resetNameInput } = useValidation(value => value.trim() !== "");
   
-  //VALIDATION
-  const [inputTouched, setInputTouched] = useState(false);
-
-  const isNameValid = !(enteredName.trim() === "");//since component will be re-rendered after every keystroke
-  const nameInputInvalid = !isNameValid && inputTouched;
-
-  const isEmailValid = enteredEmail.includes('@');
-  const emailInputInvalid = !isEmailValid && enteredEmailTouched;
+  const {
+    value: enteredEmail,
+    isValueValid: isEmailValid,
+    isInputInvalid: isEmailInputInvalid,
+    onChangeHandler: emailInputChangeHandler,
+    onBlurHandler: emailInputBlurHandler,
+    reset:resetEmail
+  } = useValidation(value => value.includes('@'));
 
   let isFormValid = false;
   if(isNameValid && isEmailValid)
     isFormValid = true;
-
-  const nameInputHandler = event => {
-    setEnteredName(event.target.value);
-  }
-  const emailInputChangeHandler = (event) => {
-    setEnteredEmail(event.target.value);
-  };
-  // gets event object by default when binded to the input
-
-  // validate OR to show the error when input loses it's focus
-  const onBlurHandler = () => {
-    setInputTouched(true);
-  }
-  const emailInputBlurHandler = (event) => {
-    setEnteredEmailTouched(true);
-  };
-
+  
   const submitHandler = event => {
     event.preventDefault();
     // by default http request is sent to the server serving this website
     // and page will be relaoded, current states will be losed
-    setInputTouched(true);
     if (!isNameValid)
       return;
     console.log(enteredName);
@@ -47,22 +33,20 @@ const SimpleInput = (props) => {
     // pointer to the input element holded in current 
     
     //Resetting the value
-    setEnteredName('');
-    setInputTouched(false);
+    resetNameInput();
     // inputRef.current.value = '';  WITH refs NOT IDEAL || DONOT MANIPULATE THE REAL DOM 
-    setEnteredEmail('');
-    setEnteredEmailTouched(false);
+    resetEmail();
   }
   
-  const nameInputClass = nameInputInvalid ? "form-control invalid" : "form-control";
-  const emailInputClasses = emailInputInvalid? 'form-control invalid': 'form-control';
+  const nameInputClass =isNameInputInvalid ? "form-control invalid" : "form-control";
+  const emailInputClasses = isEmailInputInvalid? 'form-control invalid': 'form-control';
   
     return (
       <form onSubmit={submitHandler}>
         <div className={nameInputClass}>
           <label htmlFor='name'>Your Name</label>
-          <input type='text' id='name' onChange={nameInputHandler} value={enteredName} onBlur={onBlurHandler}/>
-          {nameInputInvalid && <p className="error-text">Enter a valid name</p>}
+          <input type='text' id='name' onChange={nameInputChangeHandler} value={enteredName} onBlur={nameBlurHandler}/>
+          {isNameInputInvalid && <p className="error-text">Enter a valid name</p>}
         </div>
         <div className={emailInputClasses}>
         <label htmlFor='email'>Your E-Mail</label>
@@ -73,7 +57,7 @@ const SimpleInput = (props) => {
           onBlur={emailInputBlurHandler}
           value={enteredEmail}
         />
-        {emailInputInvalid && (
+        {isEmailInputInvalid && (
           <p className='error-text'>Please enter a valid email.</p>
         )}
         </div>
