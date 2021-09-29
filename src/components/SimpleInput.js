@@ -1,74 +1,87 @@
-import { useEffect, useRef, useState } from "react";
+import {useState } from "react";
 
 const SimpleInput = (props) => {
-  const inputRef = useRef();
-  // for using once
-  const [enteredName,setEnteredName] = useState('');
+  const [enteredName, setEnteredName] = useState('');
   // for storing values after every key stroke
+  const [enteredEmail, setEnteredEmail] = useState('');
+  const [enteredEmailTouched, setEnteredEmailTouched] = useState(false);
   
   //VALIDATION
-  const [isNameValid, setIsNameValid] = useState(false);//if set to true initially, might create a problem like in useEffect
   const [inputTouched, setInputTouched] = useState(false);
 
-  useEffect(() => {
-    if (isNameValid)
-      console.log("VALID NAME");//in case we might need to send a http request whenever name is valid 
-  },[isNameValid])
+  const isNameValid = !(enteredName.trim() === "");//since component will be re-rendered after every keystroke
+  const nameInputInvalid = !isNameValid && inputTouched;
 
-  const nameInputHandler = event=> {
+  const isEmailValid = enteredEmail.includes('@');
+  const emailInputInvalid = !isEmailValid && enteredEmailTouched;
+
+  let isFormValid = false;
+  if(isNameValid && isEmailValid)
+    isFormValid = true;
+
+  const nameInputHandler = event => {
     setEnteredName(event.target.value);
-    // Remove the error when input becomes valid (validationg after every keystroke)
-    //we will use event.target.value instead of entered name as  state updtaes aren't scheduled by React
-    //not processed immediately
-    if (event.target.value.trim() !== "") {
-      setIsNameValid(true);
-    }
   }
+  const emailInputChangeHandler = (event) => {
+    setEnteredEmail(event.target.value);
+  };
   // gets event object by default when binded to the input
 
   // validate OR to show the error when input loses it's focus
   const onBlurHandler = () => {
     setInputTouched(true);
-    if (enteredName.trim() === "") {
-      setIsNameValid(false);
-    }
   }
+  const emailInputBlurHandler = (event) => {
+    setEnteredEmailTouched(true);
+  };
 
-  const submitHandler =event => {
+  const submitHandler = event => {
     event.preventDefault();
     // by default http request is sent to the server serving this website
     // and page will be relaoded, current states will be losed
     setInputTouched(true);
-    if (enteredName.trim() === "") {
-      setIsNameValid(false);
+    if (!isNameValid)
       return;
-    }
-    setIsNameValid(true);
     console.log(enteredName);
-    const inputValue = inputRef.current.value;
-    console.log(inputValue);
     // current property of the refs holds the value assigned to ref
     // pointer to the input element holded in current 
     
     //Resetting the value
     setEnteredName('');
+    setInputTouched(false);
     // inputRef.current.value = '';  WITH refs NOT IDEAL || DONOT MANIPULATE THE REAL DOM 
+    setEnteredEmail('');
+    setEnteredEmailTouched(false);
   }
-
-  const nameInputInvalid = !isNameValid && inputTouched;
-  const formClass = nameInputInvalid ? "form-control invalid" : "form-control";
-  return (
-    <form onSubmit={submitHandler}>
-      <div className={formClass}>
-        <label htmlFor='name'>Your Name</label>
-        <input ref={inputRef} type='text' id='name' onChange={nameInputHandler} value={enteredName} onBlur={onBlurHandler}/>
-        {nameInputInvalid && <p className="error-text">Enter a valid name</p>}
-      </div>
-      <div className="form-actions">
-        <button>Submit</button>
-      </div>
-    </form>
-  );
+  
+  const nameInputClass = nameInputInvalid ? "form-control invalid" : "form-control";
+  const emailInputClasses = emailInputInvalid? 'form-control invalid': 'form-control';
+  
+    return (
+      <form onSubmit={submitHandler}>
+        <div className={nameInputClass}>
+          <label htmlFor='name'>Your Name</label>
+          <input type='text' id='name' onChange={nameInputHandler} value={enteredName} onBlur={onBlurHandler}/>
+          {nameInputInvalid && <p className="error-text">Enter a valid name</p>}
+        </div>
+        <div className={emailInputClasses}>
+        <label htmlFor='email'>Your E-Mail</label>
+        <input
+          type='email'
+          id='email'
+          onChange={emailInputChangeHandler}
+          onBlur={emailInputBlurHandler}
+          value={enteredEmail}
+        />
+        {emailInputInvalid && (
+          <p className='error-text'>Please enter a valid email.</p>
+        )}
+        </div>
+        <div className="form-actions">
+          <button disabled={!isFormValid}>Submit</button>
+        </div>
+      </form>
+    );
 };
 
 export default SimpleInput;
